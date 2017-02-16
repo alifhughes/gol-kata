@@ -5,7 +5,7 @@ In this file I hope to document my creation process and justify any notable desi
 ### Process
 
 1. Wrote out again in my own words what the program should achieve and what the rules are to start to clarify for myself what is needed.
-2. Created package.json file
+2. Created `package.json` file
     - Hope to add npm start script to it if front end is created
 3. Initialised git repository
     - added `node_modules` directory and `npm-log` to the `.gitignore`
