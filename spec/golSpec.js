@@ -1,19 +1,31 @@
 describe('Game', function (){
-	var evolve = require('../script/gol')().evolve;
 
-	it('can evolve an inital empty grid', function(){
-		var initialState = [
-			[0,0,0],
-			[0,0,0],
-			[0,0,0]
-		];
+    // Get the evolve function from the gol script
+    var evolve  = require('../script/gol')().evolve;
+    var test= require('../script/gol')().test;
 
-		var resultState = [
-			[0,0,0],
-			[0,0,0],
-			[0,0,0]
-		];
+    /**
+     * Testing evolving an empty grid
+     */
+    it('can evolve an inital empty grid', function(){
 
-		expect(evolve(initialState)).toEqual(resultState);
-	});
+        // Pass in initial empty grid
+        var initialState = [
+            [0,0,0],
+            [0,0,0],
+            [0,0,0]
+        ];
+
+        // Expected return
+        var resultState = [
+            [0,0,0],
+            [0,0,0],
+            [0,0,0]
+        ];
+
+        // Assert it has evolved an empty grid
+        expect(evolve(initialState)).toEqual(resultState);
+
+    });
+
 });
