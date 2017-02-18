@@ -1,9 +1,5 @@
 module.exports = function(){
 
-    // Better to make global variable or dependancy injection?
-    // Cell positions array containing object of a cells row and column index
-    //this.cellPositions = [];
-
     /**
      * Evolve function counts as a step in the game. Invokes other checks on the
      * scenarios
@@ -13,78 +9,66 @@ module.exports = function(){
      */
     function evolve(gridState){
 
-        // Initialise new state grid
-        var newState = [];
+        // Initiase new state grid
+        newState = [];
 
-        // Get the positions of cells in the grid
-        cellPositions = getCellPositions(gridState);
+        // Clone gridState to newState
+        var newState = gridState.map(cloneArray);
 
-        // Check if there are any cells in cellPositions array
-        if (0 === cellPositions.length) {
-            // No cells in array therefore no interactions
+        // Iterate all rows in the grid
+        for (var i = 0; i < gridState.length; i++) {
 
-            // Return the initial gridState as no changes
-            return gridState;
+            // Iterate all columns in the row
+            for (var j = 0; j < gridState[i].length; j++) {
+
+                // Get the current cell's neighbour count
+                var neighbourCount = getNeighbourCount(gridState, i, j);
+
+                // Check the neighbour count against scenario conditions
+                if (neighbourCount < 2) {
+                    // Scenario 1: Underpopulation
+
+                    // Cell has less than two neighbours, cell dies
+                    killCell(newState, i, j);
+
+                } else if (neighbourCount > 3) {
+                    // Scenario 2: Overcrowding
+
+                    // Cell has more than three neighbours, cell dies
+                    killCell(newState, i, j);
+
+                } else if (3 === neighbourCount) {
+                    // Scenario 4: Creation of Life
+
+                    // Cell has 3 neighbours, cell is created
+                    createCell(newState, i, j);
+
+                }
+            }
         }
 
+        // Return newState
+        return newState;
     }
 
     return {
         evolve: evolve,
-        checkNeighbours: checkNeighbours
+        getNeighbourCount: getNeighbourCount,
+        isOutOfBounds: isOutOfBounds
     };
 };
 
 /**
- * Get an array of the positions of the cells by iterating through the grid state
+ * Give a cell's index positions, it will return the amount of neighbours
+ * that cell has
  *
- * @param {array}  gridState         The current grid state
- * @return {array} particlePositions An array of the cells x y positions
+ * @param  {array}  gridState       The current grid state
+ * @param  {int}    row             The current cell's row index
+ * @param  {int}    column          The current cell's column index
+ * @return {int}    neighbourCount  The number of neighbours that the
+ *                                  cell has
  */
-function getCellPositions(gridState) {
-
-    // Initialise empty cell position array
-    cellPositions = [];
-
-    // Iterate each row of array
-    for (var i = 0; i < gridState.length; i++) {
-
-        // Iterate each column of the current iterations row
-        for (var j = 0; j < gridState[i].length; j++) {
-
-            // Check if current position's has a cell
-            if (0 === gridState[i][j]) {
-                // Cell is dead
-                continue;
-            }
-
-            // Cell is alive
-
-            // Initialise object for the current cell
-            var cellIndexes = {};
-
-            // Add the row and column indexes to this cell's object
-            cellIndexes.row = i;
-            cellIndexes.column = j;
-
-            // Push the current cell's indexes onto the array of cell positions
-            cellPositions.push(cellIndexes);
-
-        }
-    }
-
-    // Return the cellPositions array
-    return cellPositions;
-};
-
-/**
- * Give a cell's index positions, it will check how many neighbours it has in its surrounding area
- *
- * @param  {array}  gridState      The current grid state
- * @param  {object} cellPosition   A cell's row and column index
- * @return {int}    neighbourCount The number of neighbours that is in the area of the given cell
- */
-function checkNeighbours (gridState, cellPosition) {
+function getNeighbourCount(gridState, row, column) {
 
     // Initialise neighbour count
     var neighbourCount = 0;
@@ -92,42 +76,43 @@ function checkNeighbours (gridState, cellPosition) {
     // Set up mask size around the cell's position to check for neighbours
     var mask = 8;
 
-    // Get the number of rows and columns that is needed to count back from cell's position to get to the first neighbour to check
+    // Get the number of rows and columns that is needed to count back from
+    // cell's position to get to the first neighbour to check
     var maskRadiusFromIndex = mask / 8;
 
     // Get the starting positions to for mask check
-    var startingRowIndex    = cellPosition.row - maskRadiusFromIndex;
-    var startingColumnIndex = cellPosition.column - maskRadiusFromIndex;
+    var startingRowIndex    = row    - maskRadiusFromIndex;
+    var startingColumnIndex = column - maskRadiusFromIndex;
 
-    // Initialise boundary for loop
-    var maskBoundary = maskRadiusFromIndex + cellPosition.column
+    // Initialise boundaries for loops
+    var maskRowBoundary    = maskRadiusFromIndex + row;
+    var maskColumnBoundary = maskRadiusFromIndex + column;
 
     // Iterate all neighbours by row
-    for (var i = startingRowIndex; i < maskBoundary; i++) {
+    for (var i = startingRowIndex; i <= maskRowBoundary; i++) {
 
         // Check if index is out of bounds of the array
-        if (i > gridState.length) {
-            // Is out of bounds
+        if (isOutOfBounds(gridState, i)) {
+            // Is out of bounds of array
             continue;
         }
 
         // Iterate all neighbours by column
-        for (var j = startingColumnIndex; j < maskBoundary; j++) {
+        for (var j = startingColumnIndex; j <= maskColumnBoundary; j++) {
 
             // Check if index is out of bounds of the array
-            if (j > gridState[i].length) {
-                // Is out of bounds
+            if (isOutOfBounds(gridState[i], j)) {
+                // Is out of bounds of array
                 continue;
             }
 
             // Check if current position is the position of the cell
-            if (cellPosition.row === i && cellPosition.column ===  j) {
+            if (row === i && column ===  j) {
                 // Skip
                 continue;
 
             } else if (1 === gridState[i][j]) {
                 // Neighbour found
-
                 // Increment neighbour count
                 neighbourCount++;
 
@@ -138,3 +123,63 @@ function checkNeighbours (gridState, cellPosition) {
     // Return neighbour count
     return neighbourCount;
 };
+
+
+/**
+ * Kill the cell at the position given in the grid state given by changing the
+ * value to 0
+ *
+ * @param  {array}  newState       The new grid state
+ * @param  {int}    row            A cell's row index
+ * @param  {int}    column         A cell's column index
+ */
+function killCell (newState, row, column) {
+
+    // Set the grid state's value at the cell positions to 0
+    newState[row][column] = 0;
+};
+
+/**
+ * Create a cell at the position given in the grid state given by changing 
+ * the value to 1
+ *
+ * @param  {array}  newState       The new grid state
+ * @param  {int}    row            A cell's row index
+ * @param  {int}    column         A cell's column index
+ */
+function createCell (newState, row, column) {
+
+    // Set the grid state's value at the cell positions to 0
+    newState[row][column] = 1;
+
+};
+
+/**
+ * Clones returns the elements of array passed in
+ *
+ * @param {array} array   The array you want to copy
+ * @return {array}        A copy of array
+ */
+function cloneArray (array) {
+    return array.slice();
+};
+
+/**
+ * Checks if the index provided is out of bounds of the array provided
+ *
+ * @param   {array} array  The array to check
+ * @param   {int}   index  The index to check
+ * @returns {bool}         True if index is out of bounds of array, false if not
+ */
+function isOutOfBounds (array, index) {
+
+    // Check if index is out of bounds of the array
+    if (index >= array.length || index < 0) {
+        // Is out of bounds
+        return true;
+    }
+
+    // Return false if in array
+    return false;
+
+}
