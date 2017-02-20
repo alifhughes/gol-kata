@@ -22,8 +22,9 @@ In this file I hope to document my creation process and justify any notable desi
     - Updates newState accordingly
     - Passes all tests
 6. Hope to refactor further
+    - Change internal code to a more functional programming style
     - Change some loops for `.map()` functions
-    - Add simple front end
+    - use `splice()` to make immutable variables
 
 ### Design justification
 
@@ -49,7 +50,7 @@ gol.evolve = function (gridState) {
 
 module.exports = gol;
 ```
-I was tempted to do this because it is the way I was taught to program in JavaScript on my industrial placement and was the coding convention of that company. However, I reverted my code and decided to stick to the convention provided for two reasons: even though this is only a Kata to show our skill, it could be seen as a piece of work for a company and therefore the convention provided is the convention used by the company itself. If this is the case then I believe that you should always stick to the coding conventions of the company to promote consistency of the code base. The second reason I chose to stick to this convention was because it is unfamiliar to me, and therefore, is a new challenge to see if I can learn this style. **ADD MORE ABOUT REASONING from TECH pov**
+I was tempted to do this because it is the way I was taught to program in JavaScript on my industrial placement and was the coding convention of that company. However, I reverted my code and decided to stick to the convention provided for two reasons: even though this is only a Kata to show our skill, it could be seen as a piece of work for a company and therefore the convention provided is the convention used by the company itself. If this is the case then I believe that you should always stick to the coding conventions of the company to promote consistency of the code base. The second reason I chose to stick to this convention was because it is unfamiliar to me, and therefore, is a new challenge to see if I can learn this style.
 
 **Two separated loops:**
 
