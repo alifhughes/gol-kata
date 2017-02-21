@@ -1,4 +1,4 @@
-## Design justification and process
+## Design justification, process and assumptions
 
 In this file I hope to document my creation process and justify any notable design decisions.
 
@@ -55,3 +55,14 @@ I was tempted to do this because it is the way I was taught to program in JavaSc
 **Two separated loops:**
 
 I was tempted to make a copy grid of the world by iterating all cells and applying the number of neighbours that cell has to its position in the cloned grid, and then iterate that grid and update the `gridState` array accordingly. I chose against it because it would add another loop into the code. It would have to do all the processing in the current implementation, but also another one to then iterate the newly created grid and apply the rules. This adds to complexity and computation time.
+
+### Assumptions
+
+**Data consistency:**
+
+The data passed in format of array of 0s and 1s will always be. It will not change
+- Would have liked to add exception handling for data type checking but not in scope
+
+**The mask can change size:**
+
+- the mask size can be set to different size within the get neighbour count function

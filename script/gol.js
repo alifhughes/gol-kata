@@ -9,43 +9,11 @@ module.exports = function(){
      */
     function evolve(gridState){
 
-        // Initiase new state grid
-        newState = [];
+        // Initialise new state
+        var newState = [];
 
-        // Clone gridState to newState
-        var newState = gridState.map(cloneArray);
-
-        // Iterate all rows in the grid
-        for (var i = 0; i < gridState.length; i++) {
-
-            // Iterate all columns in the row
-            for (var j = 0; j < gridState[i].length; j++) {
-
-                // Get the current cell's neighbour count
-                var neighbourCount = getNeighbourCount(gridState, i, j);
-
-                // Check the neighbour count against scenario conditions
-                if (neighbourCount < 2) {
-                    // Scenario 1: Underpopulation
-
-                    // Cell has less than two neighbours, cell dies
-                    killCell(newState, i, j);
-
-                } else if (neighbourCount > 3) {
-                    // Scenario 2: Overcrowding
-
-                    // Cell has more than three neighbours, cell dies
-                    killCell(newState, i, j);
-
-                } else if (3 === neighbourCount) {
-                    // Scenario 4: Creation of Life
-
-                    // Cell has 3 neighbours, cell is created
-                    createCell(newState, i, j);
-
-                }
-            }
-        }
+        // Get the newly recreated grid world with the rules applied
+        newState = forEachCell(gridState, updateCell);
 
         // Return newState
         return newState;
@@ -53,10 +21,64 @@ module.exports = function(){
 
     return {
         evolve: evolve,
-        getNeighbourCount: getNeighbourCount,
-        isOutOfBounds: isOutOfBounds
+        getNeighbourCount: getNeighbourCount
     };
 };
+
+function add(a, b) {
+    return a + b;
+}
+
+function isInMask(cellRow, cellColumn) {
+
+    // Get the starting positions to for mask check
+    var startingRowIndex    = cellRow - 1;
+    var startingColumnIndex = cellColumn - 1;
+
+    // Initialise boundaries for loops
+    var maskRowBoundary    = 1 + cellRow;
+    var maskColumnBoundary = 1 + cellColumn;
+
+    // Return anonymous function that further filters the array values
+    return function (rowOfElements, rowIndex) {
+
+        // Check if row index is in bounds of mask boundary
+        if (rowIndex > maskRowBoundary) {
+            // Row index is greater than the row boundary of the mask
+            return false;
+        }
+
+        // Check if row index is out of the mask boundary
+        if (rowIndex < startingRowIndex) {
+            // It is out of the boundary, return false
+            return false;
+        }
+
+        // Return a filtered list of the column values
+        return rowOfElements.filter(function(value, columnIndex) {
+
+            // Check if column index is in bounds of mask boundary
+            if (columnIndex > maskColumnBoundary) {
+                // Column index is out of bounds of the mask
+                return false;
+            }
+
+            // Check if column index is less than the starting index
+            if (columnIndex < startingColumnIndex){
+                // it is less than the starting index
+
+                // RETURNING FALSE BUT STILL INCLUDING THE COLUMN IN THE FINAL ARRAY?
+                return false;
+            }
+
+            return true;
+
+        });
+    };
+
+    return false;
+};
+
 
 /**
  * Give a cell's index positions, it will return the amount of neighbours
@@ -68,90 +90,85 @@ module.exports = function(){
  * @return {int}    neighbourCount  The number of neighbours that the
  *                                  cell has
  */
-function getNeighbourCount(gridState, row, column) {
+function getNeighbourCount(gridState, columnValue, row, column) {
 
     // Initialise neighbour count
     var neighbourCount = 0;
 
-    // Set up mask size around the cell's position to check for neighbours
-    var mask = 8;
+    // Get array of all the values in the gridState that are in the mask
+    maskArray = gridState.filter(isInMask(row, column));
+    console.log('maskArray', maskArray);
 
-    // Get the number of rows and columns that is needed to count back from
-    // cell's position to get to the first neighbour to check
-    var maskRadiusFromIndex = mask / 8;
+    // Flatten array the maskArray to single un-nested array
+    var flattenedMaskArray = [].concat.apply([], maskArray);
 
-    // Get the starting positions to for mask check
-    var startingRowIndex    = row    - maskRadiusFromIndex;
-    var startingColumnIndex = column - maskRadiusFromIndex;
+    console.log('flattenedMaskArray', flattenedMaskArray);
 
-    // Initialise boundaries for loops
-    var maskRowBoundary    = maskRadiusFromIndex + row;
-    var maskColumnBoundary = maskRadiusFromIndex + column;
+    // Add all neighbours together
+    neighbourCount = flattenedMaskArray.reduce(add, 0);
 
-    // Iterate all neighbours by row
-    for (var i = startingRowIndex; i <= maskRowBoundary; i++) {
-
-        // Check if index is out of bounds of the array
-        if (isOutOfBounds(gridState, i)) {
-            // Is out of bounds of array
-            continue;
-        }
-
-        // Iterate all neighbours by column
-        for (var j = startingColumnIndex; j <= maskColumnBoundary; j++) {
-
-            // Check if index is out of bounds of the array
-            if (isOutOfBounds(gridState[i], j)) {
-                // Is out of bounds of array
-                continue;
-            }
-
-            // Check if current position is the position of the cell
-            if (row === i && column ===  j) {
-                // Skip
-                continue;
-
-            } else if (1 === gridState[i][j]) {
-                // Neighbour found
-                // Increment neighbour count
-                neighbourCount++;
-
-            }
-        }
-    }
+    console.log('neighbourCount', neighbourCount);
+    // Take away the cell value from neighbour count
+    neighbourCount = neighbourCount - columnValue;
+    console.log('columnValue', columnValue);
 
     // Return neighbour count
     return neighbourCount;
 };
 
-
 /**
- * Kill the cell at the position given in the grid state given by changing the
- * value to 0
- *
- * @param  {array}  newState       The new grid state
- * @param  {int}    row            A cell's row index
- * @param  {int}    column         A cell's column index
+ * Reconsider:
+ * - name
+ * - else if
  */
-function killCell (newState, row, column) {
+function updateCell(gridState, columnValue, rowIndex, columnIndex) {
 
-    // Set the grid state's value at the cell positions to 0
-    newState[row][column] = 0;
+    // Get the current cell's neighbour count
+    var neighbourCount = getNeighbourCount(gridState, columnValue, rowIndex, columnIndex);
+
+    // Check the neighbour count against scenario conditions
+    if (neighbourCount < 2) {
+        // Scenario 1: Underpopulation
+        return 0;
+
+    } else if (neighbourCount > 3) {
+        // Scenario 2: Overcrowding
+        return 0;
+
+
+    } else if (3 === neighbourCount) {
+        // Scenario 4: Creation of Life
+        return 1;
+
+    }
+
+    // Unaffected by scenarios, leave as is
+    return columnValue;
+
 };
 
 /**
- * Create a cell at the position given in the grid state given by changing 
- * the value to 1
+ * Perform the callback given as parameter to each cell in the gridState
+ * passed in
  *
- * @param  {array}  newState       The new grid state
- * @param  {int}    row            A cell's row index
- * @param  {int}    column         A cell's column index
+ * @param {array}    gridState The gridState of the world
+ * @param {function} callback  The callback function to be applied to each
+ *                             cell in the gridState
+ * @return {array}   newState  The new state of the world after the computation
  */
-function createCell (newState, row, column) {
+function forEachCell(gridState, callback) {
 
-    // Set the grid state's value at the cell positions to 0
-    newState[row][column] = 1;
+    // Return the mapping of the anonymous function on the grid state
+    return gridState.map(function (row, rowIndex) {
 
+        // Return the copy of the row after anonymous founction been applied
+        return row.slice().map(function (cellValue, columnIndex) {
+
+            // Return the callback applied to the cellValue
+            return callback(gridState, cellValue, rowIndex, columnIndex);
+
+        });
+    });
 };
 
 /**
@@ -163,23 +180,3 @@ function createCell (newState, row, column) {
 function cloneArray (array) {
     return array.slice();
 };
-
-/**
- * Checks if the index provided is out of bounds of the array provided
- *
- * @param   {array} array  The array to check
- * @param   {int}   index  The index to check
- * @returns {bool}         True if index is out of bounds of array, false if not
- */
-function isOutOfBounds (array, index) {
-
-    // Check if index is out of bounds of the array
-    if (index >= array.length || index < 0) {
-        // Is out of bounds
-        return true;
-    }
-
-    // Return false if in array
-    return false;
-
-}
