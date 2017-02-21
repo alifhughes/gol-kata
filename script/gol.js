@@ -19,112 +19,153 @@ module.exports = function(){
         return newState;
     }
 
+    // The functions to be exported
     return {
         evolve: evolve,
-        getNeighbourCount: getNeighbourCount
+        getNeighbourCount: getNeighbourCount,
+        isBeforeStart: isBeforeStart,
+        isOutBoundary: isOutBoundary
     };
 };
 
+/**
+ * Add a to b. Used in the reducing of the array values to count the neighbours
+ *
+ * @param   {int} a  First number to add
+ * @param   {int} b  The second number to add
+ * @return  {int}    The addition of the the two parameters
+ */
 function add(a, b) {
     return a + b;
 }
 
-function isInMask(cellRow, cellColumn) {
+/**
+ * Checks if the column value is in the boundaries of the mask, if it is the 
+ * value of the column is preserved. If it isn't the value is set to 0, so that
+ * it doesn't affect the neighbour count.
+ *
+ * @param  {int} cellColumn  The column index of the cell being checked
+ * @return {int}             The updated value of the cell value to be included
+ *                           in the array
+ */
+function isColumnInMask (cellColumn) {
 
-    // Get the starting positions to for mask check
-    var startingRowIndex    = cellRow - 1;
+    // Get the starting column index for the mask and the mask boundary
     var startingColumnIndex = cellColumn - 1;
+    var maskColumnBoundary  = cellColumn + 1;
 
-    // Initialise boundaries for loops
-    var maskRowBoundary    = 1 + cellRow;
-    var maskColumnBoundary = 1 + cellColumn;
+    // Return the update column values for each row
+    return function(row) {
 
-    // Return anonymous function that further filters the array values
+        // For each element in the row, set their value to the either 0
+        // if in the mask, or the value of the cell if it is in the mask
+        return row.map(function (cellValue, columnIndex) {
+
+            // Check if the colum index exceeds the mask boundary
+            if (isOutBoundary(columnIndex, maskColumnBoundary)) {
+                // Index out of bounds
+                return 0;
+            }
+
+            // Check if the column index is before the index of the mask
+            // start position
+            if (isBeforeStart(columnIndex, startingColumnIndex)) {
+                // Index is below the starting position
+                return 0;
+            }
+
+            // Is in mask row boundaries, return the value of the cell
+            return cellValue;
+
+        });
+    }
+};
+
+/**
+ * Checks if the row is in the boundaries of the mask. If it is, it is
+ * included in the array.
+ *
+ * @param {int} cellRow  The row index of the cell being checked
+ * @return {bool}        True if the row is in bounds of the mask, false
+ *                       if it isn't
+ */
+function isInMaskRow(cellRow) {
+
+    // Get the starting row index for the mask and the mask boundary
+    var startingRowIndex = cellRow - 1;
+    var maskRowBoundary  = cellRow + 1;
+
+    // Check if row is in the boundaries of the mask and return outcome
     return function (rowOfElements, rowIndex) {
 
         // Check if row index is in bounds of mask boundary
-        if (rowIndex > maskRowBoundary) {
+        if (isOutBoundary(rowIndex, maskRowBoundary)) {
             // Row index is greater than the row boundary of the mask
             return false;
         }
 
-        // Check if row index is out of the mask boundary
-        if (rowIndex < startingRowIndex) {
+        // Check if row index is before the starting row index
+        // of the mask
+        if (isBeforeStart(rowIndex, startingRowIndex)) {
             // It is out of the boundary, return false
             return false;
         }
 
-        // Return a filtered list of the column values
-        return rowOfElements.filter(function(value, columnIndex) {
-
-            // Check if column index is in bounds of mask boundary
-            if (columnIndex > maskColumnBoundary) {
-                // Column index is out of bounds of the mask
-                return false;
-            }
-
-            // Check if column index is less than the starting index
-            if (columnIndex < startingColumnIndex){
-                // it is less than the starting index
-
-                // RETURNING FALSE BUT STILL INCLUDING THE COLUMN IN THE FINAL ARRAY?
-                return false;
-            }
-
-            return true;
-
-        });
+        // Row is with the boundaries, return true to include in array
+        return true;
     };
-
-    return false;
 };
-
 
 /**
  * Give a cell's index positions, it will return the amount of neighbours
  * that cell has
  *
  * @param  {array}  gridState       The current grid state
+ * @param  {int}    cellValue       The current value of the cell being checked
  * @param  {int}    row             The current cell's row index
  * @param  {int}    column          The current cell's column index
  * @return {int}    neighbourCount  The number of neighbours that the
  *                                  cell has
  */
-function getNeighbourCount(gridState, columnValue, row, column) {
+function getNeighbourCount(gridState, cellValue, row, column) {
 
     // Initialise neighbour count
     var neighbourCount = 0;
 
-    // Get array of all the values in the gridState that are in the mask
-    maskArray = gridState.filter(isInMask(row, column));
-    console.log('maskArray', maskArray);
+    // Get the rows in the mask
+    maskArrayRows = gridState.filter(isInMaskRow(row));
+
+    // Get the column values that are in mask from the rows
+    maskArrayColumns = maskArrayRows.map(isColumnInMask(column));
 
     // Flatten array the maskArray to single un-nested array
-    var flattenedMaskArray = [].concat.apply([], maskArray);
-
-    console.log('flattenedMaskArray', flattenedMaskArray);
+    var flattenedMaskArray = [].concat.apply([], maskArrayColumns);
 
     // Add all neighbours together
     neighbourCount = flattenedMaskArray.reduce(add, 0);
 
-    console.log('neighbourCount', neighbourCount);
     // Take away the cell value from neighbour count
-    neighbourCount = neighbourCount - columnValue;
-    console.log('columnValue', columnValue);
+    neighbourCount = neighbourCount - cellValue;
 
     // Return neighbour count
     return neighbourCount;
 };
 
 /**
- * Reconsider:
- * - name
- * - else if
+ * Update the cell values according to the rules defined compared to the cell's 
+ * neighbourCount
+ *
+ * @param {array} gridState    The current gird state
+ * @param {int}   cellValue    The value in the current cell
+ * @param {int}   rowIndex     The current row index
+ * @param {int}   columnIndex  The current column index
+ * @return {int}               The updated cell value
  */
-function updateCell(gridState, columnValue, rowIndex, columnIndex) {
+function updateCell(gridState, cellValue, rowIndex, columnIndex) {
 
     // Get the current cell's neighbour count
-    var neighbourCount = getNeighbourCount(gridState, columnValue, rowIndex, columnIndex);
+    var neighbourCount =
+        getNeighbourCount(gridState, cellValue, rowIndex, columnIndex);
 
     // Check the neighbour count against scenario conditions
     if (neighbourCount < 2) {
@@ -135,7 +176,6 @@ function updateCell(gridState, columnValue, rowIndex, columnIndex) {
         // Scenario 2: Overcrowding
         return 0;
 
-
     } else if (3 === neighbourCount) {
         // Scenario 4: Creation of Life
         return 1;
@@ -143,8 +183,7 @@ function updateCell(gridState, columnValue, rowIndex, columnIndex) {
     }
 
     // Unaffected by scenarios, leave as is
-    return columnValue;
-
+    return cellValue;
 };
 
 /**
@@ -172,11 +211,25 @@ function forEachCell(gridState, callback) {
 };
 
 /**
- * Clones returns the elements of array passed in
+ * Check if the index is before the boundary value
  *
- * @param {array} array   The array you want to copy
- * @return {array}        A copy of array
+ * @param  {int} index          The index to be checked against
+ * @param  {int} boundaryValue  The boundary value to be checked against
+ * @return {bool}               True if the boundary is before the start, 
+ *                              false otherwise
  */
-function cloneArray (array) {
-    return array.slice();
-};
+function isBeforeStart(index, boundaryValue) {
+    return (index < boundaryValue) ? true : false;
+}
+
+/**
+ * Check if the index is out of bounds of the boundary value
+ *
+ * @param  {int} index          The index to be checked against
+ * @param  {int} boundaryValue  The boundary value to be checked against
+ * @return {bool}               True if the boundary is out of bounds,
+ *                              false otherwise
+ */
+function isOutBoundary(index, boundaryValue) {
+    return (index > boundaryValue) ? true : false;
+}

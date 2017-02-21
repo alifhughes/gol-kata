@@ -3,6 +3,9 @@ describe('Game', function (){
     // Get the functions to test from the gol.js file
     var evolve  = require('../script/gol')().evolve;
     var getNeighbourCount = require('../script/gol')().getNeighbourCount;
+    var isInBoundary = require('../script/gol')().isInBoundary;
+    var isOutBoundary = require('../script/gol')().isOutBoundary;
+    var add = require('../script/gol')().add;
 
     /**
      * Testing scenario 0: No interactions
@@ -24,10 +27,9 @@ describe('Game', function (){
         ];
 
         // Assert it has evolved an empty grid
-//        expect(evolve(initialState)).toEqual(resultState);
+        expect(evolve(initialState)).toEqual(resultState);
 
     });
-
 
     /**
      * Testing scenario 1: Underpopulation
@@ -49,7 +51,7 @@ describe('Game', function (){
         ];
 
         // Assert it has evolved an empty grid
-//        expect(evolve(initialState)).toEqual(resultState);
+        expect(evolve(initialState)).toEqual(resultState);
 
 
     });
@@ -74,7 +76,7 @@ describe('Game', function (){
         ];
 
         // Assert it has evolved an empty grid
-//        expect(evolve(initialState)).toEqual(resultState);
+        expect(evolve(initialState)).toEqual(resultState);
 
     });
 
@@ -99,7 +101,7 @@ describe('Game', function (){
         ];
 
         // Assert it has evolved an empty grid
-//        expect(evolve(initialState)).toEqual(resultState);
+        expect(evolve(initialState)).toEqual(resultState);
 
     });
 
@@ -115,9 +117,8 @@ describe('Game', function (){
             [0,0,0]
         ];
 
-
         // Assert that no neighbours grid returns a grid state with empty values
-        //expect(getNeighbourCount(noNeighboursGrid, 0, 1, 2)).toEqual(0);
+        expect(getNeighbourCount(noNeighboursGrid, 0, 1, 2)).toEqual(0);
 
         // Initiliase a grid with 2 neighbours
         var twoNeighboursGrid = [
@@ -137,7 +138,7 @@ describe('Game', function (){
         ];
 
         // Assert that there are 2 neighbours
-        //expect(getNeighbourCount(twoNeighboursGrid, 1, 1, 2)).toEqual(2);
+        expect(getNeighbourCount(twoNeighboursGrid, 1, 1, 2)).toEqual(2);
 
         // Initiliase a grid with 2 neighbours
         var twoNeighboursGrid = [
@@ -147,7 +148,7 @@ describe('Game', function (){
         ];
 
         // Assert that there are 2 neighbours
-        //expect(getNeighbourCount(twoNeighboursGrid, 1, 0, 2)).toEqual(2);
+        expect(getNeighbourCount(twoNeighboursGrid, 0, 0, 2)).toEqual(2);
 
         // Initiliase a grid with 8 neighbours
         var eightNeighboursGrid = [
@@ -157,8 +158,14 @@ describe('Game', function (){
         ];
 
         // Assert that there are 8 neighbours
-        //expect(getNeighbourCount(eightNeighboursGrid, 1, 1, 1)).toEqual(8);
+        expect(getNeighbourCount(eightNeighboursGrid, 1, 1, 1)).toEqual(8);
 
+    });
+
+    it('can detect if index value is out of bounds', function () {
+
+        expect(isOutBoundary(1, 0)).toEqual(true);
+        expect(isOutBoundary(-1, 0)).toEqual(false);
     });
 
 });
