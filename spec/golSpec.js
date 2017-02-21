@@ -3,9 +3,11 @@ describe('Game', function (){
     // Get the functions to test from the gol.js file
     var evolve  = require('../script/gol')().evolve;
     var getNeighbourCount = require('../script/gol')().getNeighbourCount;
-    var isInBoundary = require('../script/gol')().isInBoundary;
+    var isBeforeStart = require('../script/gol')().isBeforeStart;
     var isOutBoundary = require('../script/gol')().isOutBoundary;
     var add = require('../script/gol')().add;
+    var isColumnInMask = require('../script/gol')().isColumnInMask;
+    var isRowInMask = require('../script/gol')().isRowInMask;
 
     /**
      * Testing scenario 0: No interactions
@@ -36,7 +38,7 @@ describe('Game', function (){
      */
     it('can kill a cell if it has less than two neighbours', function () {
 
-        // Pass in initial empty grid
+        // Pass in initial grid
         var initialState = [
             [0,0,0],
             [0,1,0],
@@ -61,7 +63,7 @@ describe('Game', function (){
      */
     it('can evolve a grid as expected by documentation', function(){
 
-        // Pass in initial empty grid
+        // Pass in initial grid
         var initialState = [
             [0,0,0],
             [1,1,1],
@@ -80,13 +82,12 @@ describe('Game', function (){
 
     });
 
-
     /**
      * Testing evolving grid in expected way by document
      */
     it('can evolve a grid as expected by documentation', function(){
 
-        // Pass in initial empty grid
+        // Pass in initial grid
         var initialState = [
             [0,1,0],
             [0,1,0],
@@ -102,6 +103,57 @@ describe('Game', function (){
 
         // Assert it has evolved an empty grid
         expect(evolve(initialState)).toEqual(resultState);
+
+    });
+
+    /**
+     * Testing is row in mask
+     */
+    it('can return the rows in the mask', function(){
+
+        // Pass in initial grid
+        var gridState = [
+            [0,1,0],
+            [0,1,0],
+            [0,1,0]
+        ];
+
+        // Current row to be checked against
+        var row = 0;
+
+        // Expected rows
+        var expectedRows = [[0,1,0], [0,1,0]];
+
+        // Get the filtered rows
+        maskRow = gridState.filter(isRowInMask(row));
+
+        // Assert expected value is correct
+        expect(maskRow).toEqual(expectedRows);
+
+    });
+
+    /**
+     * Testing is column is mask
+     */
+    it('can return the column in the mask', function(){
+
+        // Pass in initial grid
+        var maskRows= [
+            [1,1,0],
+            [1,1,0]
+        ];
+
+        // Current column cell to be checked against
+        var column = 2;
+
+        // Expected column values
+        var columnValues = [[0,1,0], [0,1,0]];
+
+        // Get the filtered rows
+        maskColumn = maskRows.map(isColumnInMask(column));
+
+        // Assert expected value is correct
+        expect(maskColumn).toEqual(columnValues);
 
     });
 
@@ -162,10 +214,37 @@ describe('Game', function (){
 
     });
 
+    /**
+     * Testing if the index is out of bounds
+     */
     it('can detect if index value is out of bounds', function () {
 
+        // Assert expected values are correct
         expect(isOutBoundary(1, 0)).toEqual(true);
         expect(isOutBoundary(-1, 0)).toEqual(false);
+
+    });
+
+    /**
+     * Testing if index is before a given value
+     */
+    it('can detect if index value is before a value', function () {
+
+        // Assert expected values are correct
+        expect(isBeforeStart(1, 2)).toEqual(true);
+        expect(isBeforeStart(4, 1)).toEqual(false);
+
+    });
+
+    /**
+     * Testing if it can add two numbers correctly
+     */
+    it('can add two values together', function () {
+
+        // Assert expected values are correct
+        expect(add(1, 2)).toEqual(3);
+        expect(add(4, 1)).toEqual(5);
+
     });
 
 });

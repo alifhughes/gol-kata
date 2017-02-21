@@ -24,7 +24,10 @@ module.exports = function(){
         evolve: evolve,
         getNeighbourCount: getNeighbourCount,
         isBeforeStart: isBeforeStart,
-        isOutBoundary: isOutBoundary
+        isOutBoundary: isOutBoundary,
+        add: add,
+        isColumnInMask: isColumnInMask,
+        isRowInMask: isRowInMask
     };
 };
 
@@ -89,7 +92,7 @@ function isColumnInMask (cellColumn) {
  * @return {bool}        True if the row is in bounds of the mask, false
  *                       if it isn't
  */
-function isInMaskRow(cellRow) {
+function isRowInMask(cellRow) {
 
     // Get the starting row index for the mask and the mask boundary
     var startingRowIndex = cellRow - 1;
@@ -133,13 +136,13 @@ function getNeighbourCount(gridState, cellValue, row, column) {
     var neighbourCount = 0;
 
     // Get the rows in the mask
-    maskArrayRows = gridState.filter(isInMaskRow(row));
+    maskRows = gridState.filter(isRowInMask(row));
 
     // Get the column values that are in mask from the rows
-    maskArrayColumns = maskArrayRows.map(isColumnInMask(column));
+    maskColumns = maskRows.map(isColumnInMask(column));
 
     // Flatten array the maskArray to single un-nested array
-    var flattenedMaskArray = [].concat.apply([], maskArrayColumns);
+    var flattenedMaskArray = [].concat.apply([], maskColumns);
 
     // Add all neighbours together
     neighbourCount = flattenedMaskArray.reduce(add, 0);
